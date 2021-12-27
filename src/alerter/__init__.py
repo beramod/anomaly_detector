@@ -141,7 +141,6 @@ class Alerter:
         if event.get('state') == 'event':
             body += '\n발생시간: {}'.format(event.get('startTime').strftime('%y/%m/%d %H:%M'))
         elif event.get('state') == 'close':
-            isOpen = False
             body += '\n지속시간: {} ~ {}'.format(
                 event.get('startTime').strftime('%y/%m/%d %H:%M'), 
                 event.get('endTime').strftime('%y/%m/%d %H:%M'))
@@ -235,7 +234,6 @@ class Alerter:
             isTarget = self._isTarget(userId, eventSpec, authorityCode)
             
             if isTarget:
-                isAdmin = (authorityCode >= AUTHORITY_ADMIN_LEVEL_MIN)
                 onSms = userAlerterSpec.get('channel').get('sms')
                 onMail = userAlerterSpec.get('channel').get('mail')
                 onPush = userAlerterSpec.get('channel').get('push')
@@ -255,16 +253,6 @@ class Alerter:
                 if onSlack:
                     targets.append(self._createTarget('slack', 'ems_alert', userId))
         
-        return targets
-
-    def _createVirtualTarget(self, virtualPs):
-        if not virtualPs:
-            return []
-
-        targets = []
-
-        for phone in virtualPs.get('owners'):
-            targets.append(self._createTarget('kakao', phone, 'virtualAlert'))
         return targets
 
     def _checkAlertOff(self, alertOffSettings, event, eventSpec):

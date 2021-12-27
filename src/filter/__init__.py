@@ -23,9 +23,7 @@ class Filter:
                     messageProcErrorCnt = 0
 
                     self._checkDupEvents(context, sharedData)
-                    self._checkCloseEvents(context, sharedData)
-                    self._checkSleepEvents(context, sharedData)
-                    
+
                     alertQueue.put(clientId, context)
                 except Exception as e:
                     messageProcErrorCnt += 1
@@ -39,39 +37,9 @@ class Filter:
     def process(self, context, sharedData):
         try:
             self._checkDupEvents(context, sharedData)
-            self._checkCloseEvents(context, sharedData)
-            self._checkSleepEvents(context, sharedData)
             return 'true'
         except Exception:
             return traceback.format_exc()
-
-    def _checkCloseEvents(self, context, sharedData):
-        closeEvents = []
-        openEvents = []
-
-        for event in context.openEvents:
-            key = SharedData.eventKey(event.get('mcno'), event.get('eventCode'))
-            existEvent = sharedData.get('event', key)
-
-            if event.get('eventCode') not in self._detectEventList:
-                if event.get('endTime'):
-                    if existEvent:
-                        event['state'] = 'close'
-                        closeEvents.append(event)
-                    else:
-                        event['state'] = 'delete'
-                continue
-            else:
-                if event.get('endTime'):
-                    event['state'] = 'close'
-                    if not existEvent:
-                        event['state'] = 'delete'
-                    closeEvents.append(event)
-                else:
-                    openEvents.append(event)
-
-        context.openEvents = openEvents
-        context.closeEvents.extend(closeEvents)
 
     def _checkDupEvents(self, context, sharedData):
         openEvents = []
@@ -89,49 +57,3 @@ class Filter:
             else:
                 openEvents.append(event)
         context.openEvents = openEvents
-
-    def _checkPendingClearEvents(self, context):
-        pendingClearEvents = []
-
-        for event in context.events:
-            if event.get('pendingClearTime') and event.get('pendingClearTime') < context.timestamp:
-                event['state'] = 'event'
-                event['modify'] = True
-                pendingClearEvents.append(event)
-        
-        context.openEvents.extend(pendingClearEvents)
-    
-    def _checkSleepEvents(self, context, sharedData):
-        nowTime = int(context.timestamp.strftime('%H%M'))
-
-        for event in context.openEvents:
-            eventCode = event.get('eventCode')
-            eventSpec = sharedData.get('eventSpec', eventCode)
-            state = event.get('state')
-            if state in ['event', 'close']:
-                if not self._checkAlertTime(eventSpec.get('alertTime'), nowTime):
-                    event['state'] = 'sleep'
-                    event['modify'] = True
-        
-        for event in context.closeEvents:
-            eventCode = event.get('eventCode')
-            eventSpec = sharedData.get('eventSpec', eventCode)
-            state = event.get('state')
-            if state in ['event', 'close']:
-                if not self._checkAlertTime(eventSpec.get('alertTime'), nowTime):
-                    event['state'] = 'sleep'
-                    event['modify'] = True
-
-    def _checkDetectTime(self, detectTime, nowTime):
-        if detectTime.get('start') == '0000' and detectTime.get('end') == '0000':
-            return True
-        if int(detectTime.get('start')) <= int(nowTime) <= int(detectTime.get('end')):
-            return True
-        return False
-
-    def _checkAlertTime(self, alertTime, nowTime):
-        if alertTime.get('start') == '0000' and alertTime.get('end') == '0000':
-            return True
-        if int(alertTime.get('start')) <= int(nowTime) <= int(alertTime.get('end')):
-            return True
-        return False

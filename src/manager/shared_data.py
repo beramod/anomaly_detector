@@ -5,9 +5,7 @@ from multiprocessing import Lock
 from collections import defaultdict
 from multiprocessing import Manager
 from src.util.system_alerter import SystemAlerter
-from src.util.time_util import TimeUtil
 from src.util.db.soul import SoulDBCon
-
 
 class SharedData:
     def __init__(self):
@@ -99,29 +97,19 @@ class SharedData:
         self._updateData(metaDb, alertDb, sharedData)
 
         dataLoadTargets = self._getDataLoadTargetMcnos(metaDb)
-        self._loadInverter(dataLoadTargets, SoulDBCon.getHotDB('inverter'), sharedData)
-        self._loadPcs(dataLoadTargets, SoulDBCon.getHotDB('pcs'), sharedData)
-        self._loadBms(dataLoadTargets, SoulDBCon.getHotDB('bms'), sharedData)
         self._loadEvent(alertDb, sharedData)
-        self._loadMeter(dataLoadTargets, SoulDBCon.getHotDB('meter'), sharedData)
-        self._loadPms(dataLoadTargets, SoulDBCon.getHotDB('pms'), sharedData)
-        self._loadEmsEnv(dataLoadTargets, SoulDBCon.getHotDB('emsEnv'), sharedData)
-        self._loadWeather(dataLoadTargets, SoulDBCon.getHotDB('weather'), sharedData)
         self._loadCombinerBox(dataLoadTargets, SoulDBCon.getHotDB('combinerBox'), sharedData)
-        self._loadIsoMeter(dataLoadTargets, SoulDBCon.getHotDB('isoMeter'), sharedData)
 
     def _updateData(self, metaDb, alertDb, sharedData):
         self._loadEventType(metaDb, sharedData)
         self._loadEventSpec(metaDb, sharedData)
         self._loadEventAlarmSpec(metaDb, sharedData)
         self._loadEventLevelGroup(metaDb, sharedData)
-        # self._loadModuleEventSpec(metaDb, sharedData)
         self._loadUserAlerterSetting(metaDb, sharedData)
         self._loadUsers(metaDb, sharedData)
         self._loadPowerStations(metaDb, sharedData)
         self._loadVirtualPs(metaDb, sharedData)
         self._loadAlertOffSetting(alertDb, sharedData)
-        self._loadPmsControl(metaDb, sharedData)
         self._loadCombinerBoxMeta(metaDb, sharedData)
         
     def _loadAlertOffSetting(self, alertDb, sharedData):
@@ -247,74 +235,11 @@ class SharedData:
                 eventMap[SharedData.eventKey(mcno, eventCode)] = each
         sharedData['event'] = eventMap
 
-    def _loadInverter(self, mcnos, inverterDb, sharedData):
-        coll = inverterDb['inverters']
-        inverters = coll.find({'mcno': {'$in': mcnos}}, {'_id': False, 'createdAt': False, 'updatedAt': False})
-        if inverters:
-            inverterMap = self._makeMap(inverters, 'mcno')
-            sharedData['inverter'] = inverterMap
-
-    def _loadPcs(self, mcnos, pcsDb, sharedData):
-        coll = pcsDb['pcs']
-        pcs = coll.find({'mcno': {'$in': mcnos}}, {'_id': False, 'createdAt': False, 'updatedAt': False})
-        if pcs:
-            pcsMap = self._makeMap(pcs, 'mcno')
-            sharedData['pcs'] = pcsMap
-
-    def _loadBms(self, mcnos, bmsDb, sharedData):
-        coll = bmsDb['bms']
-        bms = coll.find({'mcno': {'$in': mcnos}}, {'_id': False, 'createdAt': False, 'updatedAt': False})
-        if bms:
-            bmsMap = self._makeMap(bms, 'mcno')
-            sharedData['bms'] = bmsMap
-
-    def _loadMeter(self, mcnos, meterDb, sharedData):
-        coll = meterDb['meters']
-        meters = coll.find({'mcno': {'$in': mcnos}}, {'_id': False, 'createdAt': False, 'updatedAt': False})
-        if meters:
-            meterMap = self._makeMap(meters, 'mcno')
-            sharedData['meter'] = meterMap
-
-    def _loadIsoMeter(self, mcnos, isoMeterDb, sharedData):
-        coll = isoMeterDb['isoMeters']
-        meters = coll.find({'mcno': {'$in': mcnos}}, {'_id': False, 'createdAt': False, 'updatedAt': False})
-        if meters:
-            meterMap = self._makeMap(meters, 'mcno')
-            sharedData['isoMeter'] = meterMap
-
-    def _loadPms(self, mcnos, pmsDb, sharedData):
-        coll = pmsDb['pms']
-        pms = coll.find({'mcno': {'$in': mcnos}}, {'_id': False, 'createdAt': False, 'updatedAt': False})
-        if pms:
-            pmsMap = self._makeMap(pms, 'mcno')
-            sharedData['pms'] = pmsMap
-
-    def _loadEmsEnv(self, mcnos, emsEnvDb, sharedData):
-        coll = emsEnvDb['emsEnv']
-        emsEnvs = coll.find({'mcno': {'$in': mcnos}}, {'_id': False, 'createdAt': False, 'updatedAt': False})
-        if emsEnvs:
-            emsEnvMap = self._makeMap(emsEnvs, 'mcno')
-            sharedData['emsEnv'] = emsEnvMap
-
-    def _loadPmsControl(self, metaDB, sharedData):
-        coll = metaDB['pmsControl']
-        pmsControls = coll.find({}, {'_id': False, 'createdAt': False, 'updatedAt': False})
-        if pmsControls:
-            pmsControlMap = self._makeMap(pmsControls, 'mcno')
-            sharedData['pmsControl'] = pmsControlMap
-
     def _makeMap(self, dataList, key):
         resultMap = {}
         for _, each in enumerate(dataList):
             resultMap[each.get(key)] = each
         return resultMap
-
-    def _loadWeather(self, mcnos, weatherDb, sharedData):
-        coll = weatherDb['weather']
-        weather = coll.find({'mcno': {'$in': mcnos}}, {'_id': False, 'createdAt': False, 'updatedAt': False})
-        if weather:
-            weatherMap = self._makeMap(weather, 'mcno')
-            sharedData['weather'] = weatherMap
 
     def _loadCombinerBox(self, mcnos, combinerBoxDb, sharedData):
         coll = combinerBoxDb['combinerBox']

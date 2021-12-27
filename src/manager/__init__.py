@@ -107,32 +107,25 @@ class AnomalyDetectorManager:
                 print('[eventConsumers] run worker({}) {}/{}'.format(worker.pid, idx + 1, len(processObjs.get('eventConsumers'))))
 
             for idx, process in enumerate(processObjs.get('detectors')):
-                worker = Process(target=process.run, args=[idx, self._rawQueue, self._eventQueue, self._sharedData])
+                worker = Process(target=process.run, args=[idx, self._rawQueue, self._sharedData])
                 worker.start()
                 workers.append(worker)
                 print('[detectors] run worker({}) {}/{}'.format(worker.pid, idx + 1, len(processObjs.get('detectors'))))
 
-            for idx, module in enumerate(COLLECT_MODULES):
-                detector = Detector()
-                worker = Process(target=detector.commErrorDetectRun, args=[idx, module, self._eventQueue, self._sharedData])
-                worker.start()
-                workers.append(worker)
-                print('[comm error detectors] run worker({}) {}/{}'.format(worker.pid, idx + 1, len(COLLECT_MODULES)))
-
             closeEventDetector = Detector()
-            closeEventWorker = Process(target=closeEventDetector.closeEventRun, args=[self._eventQueue.getSize(), self._eventQueue, self._sharedData])
+            closeEventWorker = Process(target=closeEventDetector.closeEventRun, args=[self._eventQueue, self._sharedData])
             closeEventWorker.start()
             workers.append(closeEventWorker)
             print('[close event manager] run worker({})'.format(closeEventWorker.pid))
 
             pendingEventDetector = Detector()
-            pendingEventWorker = Process(target=pendingEventDetector.pendingEventRun, args=[self._eventQueue.getSize(), self._eventQueue, self._sharedData])
+            pendingEventWorker = Process(target=pendingEventDetector.pendingEventRun, args=[self._eventQueue, self._sharedData])
             pendingEventWorker.start()
             workers.append(pendingEventWorker)
             print('[pending event manager] run worker({})'.format(pendingEventWorker.pid))
 
             sleepEventDetector = Detector()
-            sleepEventWorker = Process(target=sleepEventDetector.sleepEventRun, args=[self._eventQueue.getSize(), self._eventQueue, self._sharedData])
+            sleepEventWorker = Process(target=sleepEventDetector.sleepEventRun, args=[self._eventQueue, self._sharedData])
             sleepEventWorker.start()
             workers.append(sleepEventWorker)
             print('[sleep event manager] run worker({})'.format(sleepEventWorker.pid))

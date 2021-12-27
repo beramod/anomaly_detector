@@ -1,9 +1,6 @@
-import datetime, uuid, math
-import traceback
-
-from src.manager.shared_data import SharedData
+import datetime
+import uid
 from src.util.nines_request import NinesRequests
-
 
 class BaseDetector:
     _eventCode = 0

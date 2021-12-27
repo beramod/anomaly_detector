@@ -1,11 +1,7 @@
-import time
-import traceback
 import datetime
 from multiprocessing import Lock
 from collections import defaultdict
 from multiprocessing import Manager
-from src.util.system_alerter import SystemAlerter
-from src.util.time_util import TimeUtil
 from src.util.db.soul import SoulDBCon
 
 class SimulatorSharedData:
@@ -78,8 +74,9 @@ class SimulatorSharedData:
         metaDb = SoulDBCon.getHotDB('meta')
         alertDb = SoulDBCon.getHotDB('alert')
         self._updateData(metaDb, alertDb, mcno, sharedData)
-
         dataLoadTargets = self._getDataLoadTargetMcnos(metaDb)
+
+        ## Data Load
 
     def _updateData(self, metaDb, alertDb, mcno, sharedData):
         self._loadEventType(metaDb, sharedData)

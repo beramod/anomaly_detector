@@ -1,4 +1,4 @@
-from src.detector.detectors.g4000 import BaseDetector
+from src.detector.detectors import BaseDetector
 
 class Detector4012(BaseDetector):
     _eventCode = 4012
@@ -28,33 +28,10 @@ class Detector4012(BaseDetector):
         for no in diff_map:
             if diff_map.get(no) > 50:
                 module_nos.append(no)
+
         if len(module_nos) > 0:
             event = self._creatEvent('combinerBox', module_nos, {
-                'message': 'test'
-            })
-            return event
-        return False
-
-    ## 임시코드
-    def _diff_output_current(self):
-        data = self._data
-        combiner_boxes = data.get('combinerBoxes')
-        diffs = []
-        current_diff_threshold = 6 ## 12 / 2
-        for combiner_box_obj in combiner_boxes:
-            currents = list(map(lambda el: el.get('inputA'), combiner_box_obj.get('channels')))
-            filtered_currents = list(filter(lambda el: el != 0, currents))
-            if len(filtered_currents) == 0:
-                continue
-            current_avg = sum(filtered_currents) / len(filtered_currents)
-            current_min = min(currents)
-            current_max = max(currents)
-            diff = (current_max - current_min) > current_diff_threshold
-            if diff:
-                diffs.append(combiner_box_obj.get('combinerboxno'))
-        if len(diffs) > 0:
-            event = self._creatEvent('combinerBox', diffs, {
-                'message': 'test'
+                'message': '접속반 전압 급감. 화재 발생 확인 필요.'
             })
             return event
         return False

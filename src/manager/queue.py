@@ -15,5 +15,11 @@ class AnomalyDetectorQueue:
     def put(self, id, message):
         self._queues[id].put(message)
 
+    def putrr(self, message):
+        self._queues[self._rr].put(message)
+        self._rr += 1
+        if self._rr >= self._partition:
+            self._rr = 0
+
     def getSize(self):
         return len(self._queues)

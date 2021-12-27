@@ -153,7 +153,6 @@ class SimulatorManager:
             code_to_detector = detector_object.getCodeToDetector(shared_data)
             filter_object = Filter()
             detectors = DETECT_LIST(shared_data)
-            comm_error_detectors = detector_object.getCommErorDetectors(shared_data)
             print('Load Logs...')
             s = time.time()
             datetime_ats, data_map, log_cnt = self.load_data(mcno, datetime_from, datetime_to)
